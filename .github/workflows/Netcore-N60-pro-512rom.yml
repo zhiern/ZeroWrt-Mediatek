@@ -80,7 +80,7 @@ jobs:
     - name: 加载补丁文件
       run: |
         cd $OPENWRT_PATH
-        wget -qO - https://tinyurl.com/48k68er6 | patch -p1
+        wget -qO - https://raw.githubusercontent.com/zhiern/ZeroWrt-Mediatek/refs/heads/main/other/0001-netcore-n60-pro-512-flash-version.patch | patch -p1
         
     - name: 生成变量
       run: |
