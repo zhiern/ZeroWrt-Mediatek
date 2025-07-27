@@ -1,0 +1,25 @@
+From 89443de15ab8e3f1ed311718b8d32a1b1bc63834 Mon Sep 17 00:00:00 2001
+From: OPPEN321 <zj18139624826@gmail.com>
+Date: Mon, 28 Jul 2025 01:29:41 +0800
+Subject: [PATCH] mediatek: Device netcore-n60-pro patch file
+
+Signed-off-by: OPPEN321 <zj18139624826@gmail.com>
+---
+ target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts b/target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts
+index becd1e61a..b7fb58e7d 100644
+--- a/target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts
++++ b/target/linux/mediatek/dts/mt7986a-netcore-n60-pro.dts
+@@ -241,7 +241,7 @@
+ 
+ 			partition@580000 {
+ 				label = "ubi";
+-				reg = <0x0580000 0x7280000>;
++				reg = <0x0580000 0x1ea00000>;
+ 			};
+ 		};
+ 	};
+-- 
+2.43.0
