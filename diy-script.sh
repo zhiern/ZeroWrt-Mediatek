@@ -96,7 +96,7 @@ sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci-
 cp -f $GITHUB_WORKSPACE/scripts/mac80211.sh package/kernel/mac80211/files/lib/wifi/mac80211.sh
 
 # 切换内核版本为6.12
-sed -i 's/6.6/6.12/g'  ./target/linux/mediatek/Makefile
+sed -i 's/6.6/6.12/g' target/linux/mediatek/Makefile
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
