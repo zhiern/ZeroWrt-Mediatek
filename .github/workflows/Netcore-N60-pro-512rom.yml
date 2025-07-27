@@ -58,7 +58,7 @@ jobs:
         temp-reserve-mb: 100
         root-reserve-mb: 1024
 
-    - name: Checkout
+    - name: 克隆当前仓库
       uses: actions/checkout@main
 
     - name: 克隆源代码
@@ -83,7 +83,7 @@ jobs:
         cd $OPENWRT_PATH
         wget -qO - https://tinyurl.com/48k68er6 | patch -p1
         
-    - name: Generate Variables
+    - name: 生成变量
       run: |
         cp $CONFIG_FILE $OPENWRT_PATH/.config
         cd $OPENWRT_PATH
