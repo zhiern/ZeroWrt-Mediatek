@@ -10,7 +10,7 @@
 
 ### 📒 固件信息
 - 💻 平台架构: Mediatek
-- 🔧 固件源码: [${{ env.REPO_URL }}](https://github.com/coolsnowwolf/lede)
+- 🔧 固件源码: https://github.com/coolsnowwolf/lede
 - 🌿 源码分支: master
 - 🧬 内核版本: kernel-6.12
 - 🏠 默认地址: 10.0.0.1
