@@ -32,8 +32,6 @@
   
 - 在工作流运行的列表上方，单击“**Run workflow**”按钮，选择要构建的设备固件并运行工作流。
   
-  ![image](https://github.com/user-attachments/assets/3eae2e9f-efe6-48ad-8e9d-39c176fcd71c)
-  
 ## 🏆 鸣谢 [![](https://img.shields.io/badge/-跪谢各大佬-FFFFFF.svg)](#鸣谢-)
 | [ImmortalWrt](https://github.com/immortalwrt) | [coolsnowwolf](https://github.com/coolsnowwolf) | [P3TERX](https://github.com/P3TERX) | [Flippy](https://github.com/unifreq) |
 | :-------------: | :-------------: | :-------------: | :-------------: |
