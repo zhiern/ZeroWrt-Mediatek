@@ -66,7 +66,7 @@ jobs:
         df -hT $GITHUB_WORKSPACE
         git clone $REPO_URL -b $REPO_BRANCH openwrt
         cd openwrt
-        curl -s "https://tinyurl.com/2d26nhk9" > feeds.conf.default
+        curl -s "https://raw.githubusercontent.com/zhiern/ZeroWrt-Mediatek/refs/heads/main/other/feeds.conf.default" > feeds.conf.default
         echo "OPENWRT_PATH=$PWD" >> $GITHUB_ENV
         COMMIT_AUTHOR=$(git show -s --date=short --format="作者: %an")
         echo "COMMIT_AUTHOR=$COMMIT_AUTHOR" >> $GITHUB_ENV
