@@ -92,7 +92,7 @@ sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci/
 sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci-nginx/Makefile
 
 # WIFI相关设置
-
+cp -f $GITHUB_WORKSPACE/scripts/Modify_Wi-Fi_related_settings package/kernel/mac80211/files/lib/wifi/mac80211.sh
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
