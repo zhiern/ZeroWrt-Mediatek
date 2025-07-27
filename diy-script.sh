@@ -29,6 +29,10 @@ function git_sparse_clone() {
   cd .. && rm -rf $repodir
 }
 
+# golang 1.25
+rm -rf feeds/packages/lang/golang
+git clone https://github.com/sbwml/packages_lang_golang -b 25.x feeds/packages/lang/golang
+
 # 添加额外插件
 git clone --depth=1 https://github.com/kongfl888/luci-app-adguardhome package/luci-app-adguardhome
 git clone --depth=1 -b openwrt-18.06 https://github.com/tty228/luci-app-wechatpush package/luci-app-serverchan
@@ -52,9 +56,6 @@ git clone --depth=1 -b 18.06 https://github.com/jerrykuku/luci-theme-argon packa
 git clone --depth=1 https://github.com/jerrykuku/luci-app-argon-config package/luci-app-argon-config
 git clone --depth=1 https://github.com/xiaoqingfengATGH/luci-theme-infinityfreedom package/luci-theme-infinityfreedom
 git_sparse_clone main https://github.com/haiibo/packages luci-theme-atmaterial luci-theme-opentomcat luci-theme-netgear
-
-# 更改 Argon 主题背景
-cp -f $GITHUB_WORKSPACE/images/bg1.jpg package/luci-theme-argon/htdocs/luci-static/argon/img/bg1.jpg
 
 # SmartDNS
 git clone --depth=1 -b lede https://github.com/pymumu/luci-app-smartdns package/luci-app-smartdns
@@ -92,7 +93,10 @@ sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci/
 sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci-nginx/Makefile
 
 # WIFI相关设置
-cp -f $GITHUB_WORKSPACE/scripts/Modify_Wi-Fi_related_settings package/kernel/mac80211/files/lib/wifi/mac80211.sh
+cp -f $GITHUB_WORKSPACE/scripts/mac80211.sh package/kernel/mac80211/files/lib/wifi/mac80211.sh
+
+# 切换内核版本为6.12
+sed -i 's/6.6/6.12/g'  ./target/linux/mediatek/Makefile
 
 ./scripts/feeds update -a
 ./scripts/feeds install -a
