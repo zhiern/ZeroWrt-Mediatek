@@ -1,0 +1,25 @@
+From f2a737fcfebc3296f55f2295912c3000e0c05ebd Mon Sep 17 00:00:00 2001
+From: OPPEN321 <zj18139624826@gmail.com>
+Date: Mon, 28 Jul 2025 02:27:19 +0800
+Subject: [PATCH] mediatek: Device Nokia-ea0326gmp patch file
+
+Signed-off-by: OPPEN321 <zj18139624826@gmail.com>
+---
+ target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts b/target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts
+index 754be2ae9..a1b1ac1d3 100644
+--- a/target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts
++++ b/target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts
+@@ -194,7 +194,7 @@
+ 
+ 			partition@2180000 {
+ 				label = "ubi";
+-				reg = <0x2180000 0x5680000>;
++				reg = <0x2180000 0x6e00000>;
+ 			};
+ 		};
+ 	};
+-- 
+2.43.0
