@@ -87,5 +87,12 @@ orig_version=$(cat "package/lean/default-settings/files/zzz-default-settings" | 
 sed -i "s/${orig_version}/R${date_version} by OPPEN321/g" package/lean/default-settings/files/zzz-default-settings
 sed -i "s|echo \"DISTRIB_DESCRIPTION='LEDE '|\"echo \"DISTRIB_DESCRIPTION='ZeroWrt 标准版 @ '|\"g" package/lean/default-settings/files/zzz-default-settings
 
+# 修改默认主题
+sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci/Makefile
+sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci-nginx/Makefile
+
+# WIFI相关设置
+
+
 ./scripts/feeds update -a
 ./scripts/feeds install -a
