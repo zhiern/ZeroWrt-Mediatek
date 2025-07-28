@@ -1,73 +1,133 @@
-name: Mediatek-UBOOT
-
 on:
-  push:
+  #自动编译：每周日早上4点
+  #schedule:
+    #- cron: 0 20 * * 0
+  #手动编译
+  workflow_dispatch:
+
+env:
+  WRT_REPO: https://github.com/1715173329/bl-mt798x-oss.git
+  WRT_BRANCH: atf-2025
 
 jobs:
-  generate_list:
-    name: Generate build list
-    runs-on: ubuntu-latest
-    outputs:
-      list: ${{ steps.list.outputs.list }}
-
-    steps:
-      - name: Checkout source tree
-        uses: actions/checkout@v4
-        with:
-          repository: 1715173329/bl-mt798x-oss
-          fetch-depth: '1'
-
-      - name: Generate build list
-        id: list
-        run: |
-          COMMIT="$(git log --pretty=format:"%H" -1 uboot-mtk-*/configs)"
-          CONFIGS="$(git show --name-only "$COMMIT" | awk -F '/' '/^uboot.*defconfig$/ {printf "\"%s\",", $NF}' | sed 's/,$//')"
-          JSON_LIST="{\"runner\": [\"ubuntu-latest\"],\"list\": [$CONFIGS]}"
-          echo "$JSON_LIST" | jq .
-          echo "list=$JSON_LIST" >> "$GITHUB_OUTPUT"
-
   build:
-    name: Build ${{ matrix.list }}
-    needs: generate_list
-    runs-on: ${{ matrix.runner }}
+    name: Build Mediatek UBOOT
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     strategy:
-      matrix: ${{ fromJson(needs.generate_list.outputs.list) }}
       fail-fast: false
-      max-parallel: 15
+      matrix:
+        WRT_ATF: [atf-20220606-637ba581b, atf-20240117-bacca82a8]
+        WRT_MTK: [uboot-mtk-20230718-09eda825]
 
     steps:
-      - name: Install dependencies
+      - name: Checkout Projects
+        uses: actions/checkout@main
+
+      - name: Initialization Environment
         env:
           DEBIAN_FRONTEND: noninteractive
         run: |
-          sudo -E apt-get install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev device-tree-compiler
+          sudo -E apt -yqq purge firefox
+          sudo -E apt -yqq update
+          sudo -E apt -yqq full-upgrade
+          sudo -E apt -yqq autoremove --purge
+          sudo -E apt -yqq autoclean
+          sudo -E apt -yqq clean
+          sudo -E apt -yqq install dos2unix bison build-essential device-tree-compiler flex gcc-aarch64-linux-gnu libssl-dev qemu-user-static
+          sudo -E systemctl daemon-reload
+          sudo -E timedatectl set-timezone "Asia/Shanghai"
 
-      - name: Checkout source tree
-        uses: actions/checkout@v4
+          sudo mkdir -p /mnt/build_wrt
+          sudo chown $USER:$USER /mnt/build_wrt
+          sudo ln -s /mnt/build_wrt $GITHUB_WORKSPACE/wrt
 
-      - name: Build BL2 and FIP
-        env:
-          CONFIG: ${{ matrix.list }}
+      - name: Initialization Values
         run: |
-          export SOC="${CONFIG%%_*}"
-          BOARD="${CONFIG#*_}"
-          export BOARD="${BOARD%_*}"
-          mkdir -p "output"
-          ./build.sh 2>&1 | tee "output/build.log"
-          sha256sum "output"/* | sed "s|output/||" > "output/sha256sums"
-          echo "ARTIFACT_NAME=$SOC-$BOARD" >> "$GITHUB_ENV"
+          echo "WRT_AUTHOR=$(echo $WRT_REPO | cut -d '/' -f 4)" >> $GITHUB_ENV
+          echo "WRT_DATE=$(TZ=UTC-8 date +"%y.%m.%d")" >> $GITHUB_ENV
+          echo "WRT_VER=$(echo ${{matrix.WRT_ATF}} | grep -oP 'atf-\d+')_$(echo ${{matrix.WRT_MTK}} | grep -oP 'mtk-\d+')" >> $GITHUB_ENV
 
-      - name: Upload build outputs
-        uses: actions/upload-artifact@v4
-        with:
-          name: ${{ env.ARTIFACT_NAME }}
-          path: output/*
+      - name: Clone Code
+        run: |
+          git clone --depth=1 --single-branch --branch $WRT_BRANCH $WRT_REPO ./wrt/
 
-      - name: 上传固件以发布
-        uses: ncipollo/release-action@v1
+      - name: Compile Prepare
+        run: |
+          sed -i "5s/UBOOT_DIR=.*/UBOOT_DIR=${{matrix.WRT_MTK}}/" ./wrt/build.sh
+          sed -i "7s/ATF_DIR=.*/ATF_DIR=${{matrix.WRT_ATF}}/" ./wrt/build.sh
+
+          # 收集 uboot 配置并生成 Uboots.txt
+          declare -A lines_map
+          while IFS= read -r f; do
+            [[ $(basename "$f") =~ ^(mt798[16])_(.*)_defconfig$ ]] || continue
+            soc="${BASH_REMATCH[1]}"
+            rest="${BASH_REMATCH[2]}"
+            board="${rest%_multi_layout}"
+
+            key="$soc:$board"
+            if [[ $rest == *_multi_layout ]]; then
+              lines_map["$key"]="SOC=$soc BOARD=$board MULTI_LAYOUT=1 ./build.sh"
+            elif [[ -z "${lines_map[$key]}" ]]; then
+              lines_map["$key"]="SOC=$soc BOARD=$board ./build.sh"
+            fi
+          done < <(find ./wrt/uboot-mtk-*/configs -type f -name 'mt798*defconfig' | grep -iE 'mt798[16]_' | grep -ivE 'rfb|fpga')
+
+          # 输出 Uboots.txt
+          printf "%s\n" "${lines_map[@]}" | sort > ./Uboots.txt
+
+          # 生成 TYPE_7981 和 TYPE_7986（按 SOC 分类，BOARD 大写 + 排序）
+          for soc in 7981 7986; do
+            boards=$(awk -v s="SOC=mt$soc" '$0 ~ s {
+              for (i=1; i<=NF; i++) if ($i ~ /^BOARD=/) {
+                split($i, a, "="); print toupper(a[2]);
+              }
+            }' ./Uboots.txt | sort -u | xargs)
+            eval "TYPE_$soc=\"$boards\""
+          done
+
+          # 检查权限
+          mv -f Uboots.txt Uboots.sh
+          find ./ -maxdepth 3 -type f -iregex ".*\(txt\|sh\)$" -exec dos2unix {} \; -exec chmod +x {} \;
+
+          echo "WRT_TYPE_7981=$TYPE_7981" >> $GITHUB_ENV
+          echo "WRT_TYPE_7986=$TYPE_7986" >> $GITHUB_ENV
+
+      - name: Compile Firmware
+        run: |
+          cd ./wrt/
+
+          $GITHUB_WORKSPACE/Uboots.sh
+
+      - name: Machine Information
+        run: |
+          cd ./wrt/
+
+          echo "======================="
+          lscpu | grep -E "name|Core|Thread"
+          echo "======================="
+          df -h
+          echo "======================="
+          du -h --max-depth=1
+          echo "======================="
+
+      - name: Package Firmware
+        run: |
+          cd ./wrt/ && mkdir ./upload/
+
+          for FILE in $(find ./output/ -type f -iname "*.*") ; do
+            EXT=$(basename $FILE | cut -d '.' -f 2-)
+            NAME=$(basename $FILE | cut -d '.' -f 1)
+            NEW_FILE="$NAME"_"$WRT_VER"_"$WRT_DATE"."$EXT"
+            mv -f $FILE ./upload/$NEW_FILE
+          done
+
+          zip -r ./upload/"$WRT_AUTHOR"_"$WRT_VER"_"$WRT_DATE".zip ./upload/*.*
+
+      - name: Release Firmware
+        uses: softprops/action-gh-release@v2
         with:
-          name: Mediatek-UBOOT
-          allowUpdates: true
-          tag: Mediatek-UBOOT
-          token: ${{ secrets.GITHUB_TOKEN }}
-          artifacts: output/*         
+          tag_name: Mediatek-UBOOT
+          files: ./wrt/upload/*.*
