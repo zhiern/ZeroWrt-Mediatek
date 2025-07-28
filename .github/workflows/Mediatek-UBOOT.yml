@@ -100,7 +100,7 @@ jobs:
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: release_798x_$(date +%Y%m%d)
+          tag_name: Mediatek-UBOOT
           files: firmware_798x_*.zip
           body: |
             ✅ 自动构建完成！
