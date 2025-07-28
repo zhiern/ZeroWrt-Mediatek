@@ -1,3 +1,5 @@
+name: Mediatek-UBOOT
+
 on:
   #自动编译：每周日早上4点
   #schedule:
