@@ -2,14 +2,9 @@ name: Netcore-N60-pro-512rom OpenWrt
 
 on:
   workflow_dispatch:
-# 定时触发编译
   schedule:
     - cron: 1 23 * * 4
-
-# 点赞☆Star触发编译
-#  watch:
-#    types: [started]
-
+    
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
   REPO_BRANCH: master
