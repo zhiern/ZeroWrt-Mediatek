@@ -3,7 +3,7 @@ name: Cetron-CT3003 OpenWrt
 on:
   workflow_dispatch:
   schedule:
-    - cron: 25 23 * * 4
+    - cron: 6 23 * * 4
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
