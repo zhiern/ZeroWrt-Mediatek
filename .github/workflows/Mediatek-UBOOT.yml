@@ -1,111 +1,73 @@
 name: Mediatek-UBOOT
 
 on:
-  # 自动编译：每周日早上 4 点（可启用）
-  # schedule:
-  #   - cron: 0 20 * * 0
-  # 手动触发
-  workflow_dispatch:
-
-env:
-  REPO_URL: https://github.com/1715173329/bl-mt798x-oss.git
-  REPO_BRANCH: atf-2025
-  TZ: Asia/Shanghai
-
-permissions: write-all
+  push:
 
 jobs:
-  prepare:
-    name: Generate Build Matrix
+  generate_list:
+    name: Generate build list
     runs-on: ubuntu-latest
     outputs:
-      matrix: ${{ steps.set-matrix.outputs.matrix }}
+      list: ${{ steps.list.outputs.list }}
 
     steps:
-      - name: Clone source repository
-        run: |
-          git clone --depth=1 --branch $REPO_BRANCH $REPO_URL wrt
+      - name: Checkout source tree
+        uses: actions/checkout@v4
+        with:
+          repository: 1715173329/bl-mt798x-oss
+          fetch-depth: '0'
 
-      - name: Generate defconfig list
-        id: set-matrix
+      - name: Generate build list
+        id: list
         run: |
-          cd wrt
-          CONFIGS=$(find uboot-mtk-*/configs -type f -name 'mt798*.defconfig' | grep -ivE 'rfb|fpga' | sed 's|.*/||')
-          MATRIX=$(jq -nc --argjson list "$(echo "$CONFIGS" | jq -R -s -c 'split("\n")[:-1]')" '{"include": [ .list[] | {config: .} ]}')
-          echo "matrix=$MATRIX" >> $GITHUB_OUTPUT
+          COMMIT="$(git log --pretty=format:"%H" -1 uboot-mtk-*/configs)"
+          CONFIGS="$(git show --name-only "$COMMIT" | awk -F '/' '/^uboot.*defconfig$/ {printf "\"%s\",", $NF}' | sed 's/,$//')"
+          JSON_LIST="{\"runner\": [\"ubuntu-latest\"],\"list\": [$CONFIGS]}"
+          echo "$JSON_LIST" | jq .
+          echo "list=$JSON_LIST" >> "$GITHUB_OUTPUT"
 
   build:
-    name: Build ${{ matrix.config }}
-    needs: prepare
-    runs-on: ubuntu-latest
+    name: Build ${{ matrix.list }}
+    needs: generate_list
+    runs-on: ${{ matrix.runner }}
     strategy:
-      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.generate_list.outputs.list) }}
       fail-fast: false
-      max-parallel: 8
+      max-parallel: 15
 
     steps:
-      - name: Set up environment
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y gcc-aarch64-linux-gnu build-essential flex bison libssl-dev device-tree-compiler dos2unix
-
-      - name: Clone source code
-        run: |
-          git clone --depth=1 --branch $REPO_BRANCH $REPO_URL wrt
-
-      - name: Build U-Boot for ${{ matrix.config }}
-        working-directory: wrt
+      - name: Install dependencies
         env:
-          CONFIG: ${{ matrix.config }}
+          DEBIAN_FRONTEND: noninteractive
         run: |
-          soc=${CONFIG%%_*}
-          rest=${CONFIG#*_}
-          board=${rest%_multi_layout}
-          [[ $CONFIG == *multi_layout* ]] && MULTI="MULTI_LAYOUT=1" || MULTI=""
-          mkdir -p output
-          SOC=$soc BOARD=$board $MULTI ./build.sh
+          sudo -E apt-get install gcc-aarch64-linux-gnu build-essential flex bison libssl-dev device-tree-compiler
 
-      - name: Rename and pack artifacts
-        working-directory: wrt
+      - name: Checkout source tree
+        uses: actions/checkout@v4
+
+      - name: Build BL2 and FIP
+        env:
+          CONFIG: ${{ matrix.list }}
         run: |
-          mkdir -p upload
-          for f in output/*; do
-            base=$(basename "$f")
-            new_name="${{ matrix.config }}_$(date +%y%m%d).$base"
-            cp "$f" "upload/$new_name"
-          done
+          export SOC="${CONFIG%%_*}"
+          BOARD="${CONFIG#*_}"
+          export BOARD="${BOARD%_*}"
+          mkdir -p "output"
+          ./build.sh 2>&1 | tee "output/build.log"
+          sha256sum "output"/* | sed "s|output/||" > "output/sha256sums"
+          echo "ARTIFACT_NAME=$SOC-$BOARD" >> "$GITHUB_ENV"
 
-      - name: Upload artifact
+      - name: Upload build outputs
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.config }}
-          path: wrt/upload/*
+          name: ${{ env.ARTIFACT_NAME }}
+          path: output/*
 
-  release:
-    name: Create Release
-    needs: build
-    runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'workflow_dispatch' }}
-    steps:
-      - name: Download all artifacts
-        uses: actions/download-artifact@v4
+      - name: 上传固件以发布
+        uses: ncipollo/release-action@v1
         with:
-          path: release
-
-      - name: Zip all artifacts
-        run: |
-          cd release
-          zip -r ../firmware_798x_$(date +%y%m%d).zip ./*
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: Mediatek-UBOOT
-          files: firmware_798x_*.zip
-          body: |
-            ✅ 自动构建完成！
-
-            - 平台：MT798x
-            - 源码仓库：${{ env.REPO_URL }}
-            - 分支：${{ env.REPO_BRANCH }}
-            - 时间：$(date "+%Y-%m-%d %H:%M")
+          name: Mediatek-UBOOT
+          allowUpdates: true
+          tag: Mediatek-UBOOT
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: output/*         
