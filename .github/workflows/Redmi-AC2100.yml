@@ -76,11 +76,6 @@ jobs:
         echo "COMMIT_MESSAGE=$COMMIT_MESSAGE" >> $GITHUB_ENV
         COMMIT_HASH=$(git show -s --date=short --format="hash: %H")
         echo "COMMIT_HASH=$COMMIT_HASH" >> $GITHUB_ENV
-
-    - name: 加载补丁文件
-      run: |
-        cd $OPENWRT_PATH
-        wget -qO - https://raw.githubusercontent.com/zhiern/ZeroWrt-Mediatek/refs/heads/main/other/0001-netcore-n60-pro-512rom.patch | patch -p1
         
     - name: 生成变量
       run: |
