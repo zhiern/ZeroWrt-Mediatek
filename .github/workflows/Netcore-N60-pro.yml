@@ -2,8 +2,8 @@ name: Netcore-N60-pro OpenWrt
 
 on:
   workflow_dispatch:
-#  schedule:
-#    - cron: 0 19 * * *
+  schedule:
+    - cron: 25 23 * * 4
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
