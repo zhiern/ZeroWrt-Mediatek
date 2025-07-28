@@ -3,7 +3,7 @@ name: Nokia_EA0326GMP OpenWrt
 on:
   workflow_dispatch:
   schedule:
-    - cron: 25 23 * * 4
+    - cron: 30 18 * * 5
 
 env:
   REPO_URL: https://github.com/coolsnowwolf/lede
