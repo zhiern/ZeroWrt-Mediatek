@@ -69,6 +69,9 @@ sed -i '$i uci set nlbwmon.@nlbwmon[0].refresh_interval=2s' package/lean/default
 sed -i '$i uci commit nlbwmon' package/lean/default-settings/files/zzz-default-settings
 chmod 755 package/luci-app-onliner/root/usr/share/onliner/setnlbw.sh
 
+# 默认设置
+cp -f $GITHUB_WORKSPACE/scripts/zzz-default-settings package/lean/default-settings/files/zzz-default-settings
+
 # 修改版本为编译日期
 date_version=$(date +"%y.%m.%d")
 orig_version=$(cat "package/lean/default-settings/files/zzz-default-settings" | grep DISTRIB_REVISION= | awk -F "'" '{print $2}')
@@ -82,9 +85,6 @@ sed -i 's/luci-theme-bootstrap/luci-theme-design/g' feeds/luci/collections/luci-
 
 # WIFI相关设置
 cp -f $GITHUB_WORKSPACE/scripts/mac80211.sh package/kernel/mac80211/files/lib/wifi/mac80211.sh
-
-# 默认设置
-cp -f $GITHUB_WORKSPACE/scripts/zzz-default-settings package/lean/default-settings/files/zzz-default-settings
 
 # 切换内核版本为6.12
 sed -i 's/6.6/6.12/g' target/linux/mediatek/Makefile
