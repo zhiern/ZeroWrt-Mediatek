@@ -47,6 +47,10 @@ git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall-packages packa
 git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall package/luci-app-passwall
 git clone --depth=1 https://github.com/xiaorouji/openwrt-passwall2 package/luci-app-passwall2
 git_sparse_clone master https://github.com/vernesong/OpenClash luci-app-openclash
+cp -f $GITHUB_WORKSPACE/other/openclash.lua package/luci-app-openclash/luci-app-openclash/luasrc/controller/openclash.lua
+cp -f $GITHUB_WORKSPACE/other/passwall.lua package/luci-app-passwall/luci-app-passwall/luasrc/controller/passwall.lua
+cp -f $GITHUB_WORKSPACE/other/passwall2.lua package/luci-app-passwall2/luci-app-passwall2/luasrc/controller/passwall2.lua
+cp -f $GITHUB_WORKSPACE/other/shadowsocksr.lua package/luci-app-ssr-plus/luci-app-ssr-plus/luasrc/controller/shadowsocksr.lua
 
 # Themes
 git clone --depth=1 -b 18.06 https://github.com/kiddin9/luci-theme-edge package/luci-theme-edge
