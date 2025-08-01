@@ -80,8 +80,10 @@ jobs:
     - name: 加载补丁文件
       run: |
         cd $OPENWRT_PATH
-        wget -qO - https://raw.githubusercontent.com/zhiern/ZeroWrt-Mediatek/refs/heads/main/other/0002-Nokia-ea0326gmp.patch | patch -p1
-        
+        rm -rf target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts
+        wget -O target/linux/mediatek/dts/mt7981b-nokia-ea0326gmp.dts https://raw.githubusercontent.com/zhiern/ZeroWrt-Mediatek/refs/heads/main/other/mt7981b-nokia-ea0326gmp.dts
+ #        wget -qO - https://raw.githubusercontent.com/zhiern/ZeroWrt-Mediatek/refs/heads/main/other/0002-Nokia-ea0326gmp.patch | patch -p1       
+
     - name: 生成变量
       run: |
         cp $CONFIG_FILE $OPENWRT_PATH/.config
