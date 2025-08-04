@@ -10,7 +10,6 @@ function index()
                 return
         end
 
-
 	local page
 	
 	page = entry({"admin", "services", "openclash"}, alias("admin", "services", "openclash", "client"), _("OpenClash"), 50)
